@@ -24,6 +24,8 @@ Route::prefix('v1')->group(function () {
         // Estado de resultados por mes específico
         Route::get('/estado-resultados/{year}/{month}', [FinanzasApiController::class, 'estadoResultadosMes']);
 
+        Route::get('/finanzas/estado-resultados-anual', [FinanzasApiController::class, 'estadoResultadosAnual']);
+
         // Ventas por cliente
         Route::get('/ventas-clientes', [FinanzasApiController::class, 'ventasClientes']);
 

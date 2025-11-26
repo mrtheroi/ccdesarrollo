@@ -48,6 +48,25 @@ class FinanzasApiController extends Controller
         return response()->json($row);
     }
 
+    public function estadoResultadosAnual(Request $request)
+    {
+        $fromYear = $request->query('from_year'); // opcional
+        $toYear   = $request->query('to_year');   // opcional
+
+        $query = DB::table('vw_estado_resultados_anual');
+
+        if ($fromYear) {
+            $query->where('anio', '>=', (int) $fromYear);
+        }
+        if ($toYear) {
+            $query->where('anio', '<=', (int) $toYear);
+        }
+
+        $data = $query->orderBy('anio')->get();
+
+        return response()->json($data);
+    }
+
     /**
      * GET /api/finanzas/ventas-clientes
      * ?year=2024&limit=10
