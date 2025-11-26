@@ -37,5 +37,7 @@ Route::prefix('v1')->group(function () {
 
         // Cartera: detalle de facturas pendientes
         Route::get('/cartera-detalle', [FinanzasApiController::class, 'carteraDetalle']);
+
+        Route::get('/cartera-detalle', [FinanzasApiController::class, 'kpiCarteraResumen']);
     });
 });

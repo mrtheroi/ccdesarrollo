@@ -259,4 +259,60 @@ class FinanzasApiController extends Controller
             'data'        => $rows,
         ]);
     }
+
+    public function kpiCarteraResumen(Request $request)
+    {
+        $fechaCorte = $request->query('fecha_corte', date('Y-m-d'));
+
+        $row = DB::selectOne("
+        WITH params AS (
+            SELECT ?::date AS fecha_corte
+        ),
+        pagos_por_factura AS (
+            SELECT id_factura, SUM(monto_pagado) AS total_pagado
+            FROM pagos_clientes
+            GROUP BY id_factura
+        ),
+        saldos AS (
+            SELECT
+                f.id_factura,
+                f.total,
+                f.fecha_emision,
+                f.fecha_vencimiento,
+                f.total - COALESCE(p.total_pagado, 0) AS saldo_pendiente,
+                (SELECT fecha_corte FROM params) - f.fecha_vencimiento AS dias_atraso
+            FROM facturas_venta f
+            LEFT JOIN pagos_por_factura p ON p.id_factura = f.id_factura
+        ),
+        cartera AS (
+            SELECT
+                SUM(CASE WHEN saldo_pendiente > 0 THEN saldo_pendiente ELSE 0 END) AS cartera_total,
+                SUM(CASE WHEN saldo_pendiente > 0 AND dias_atraso >= 0 THEN saldo_pendiente ELSE 0 END) AS cartera_vencida
+            FROM saldos
+        ),
+        ventas_mes AS (
+            SELECT
+                date_trunc('month', (SELECT fecha_corte FROM params))::date AS mes_ref,
+                SUM(total) AS ventas_mes
+            FROM facturas_venta
+            WHERE date_trunc('month', fecha_emision) = date_trunc('month', (SELECT fecha_corte FROM params))
+        )
+        SELECT
+            cartera_total,
+            cartera_vencida,
+            ROUND(
+                CASE WHEN cartera_total > 0 THEN cartera_vencida * 100.0 / cartera_total ELSE 0 END
+            , 2) AS pct_cartera_vencida_sobre_total,
+            ventas_mes,
+            ROUND(
+                CASE WHEN ventas_mes > 0 THEN cartera_vencida * 100.0 / ventas_mes ELSE 0 END
+            , 2) AS pct_cartera_vencida_sobre_ventas_mes
+        FROM cartera, ventas_mes;
+    ", [$fechaCorte]);
+
+        return response()->json([
+            'fecha_corte' => $fechaCorte,
+            'data' => $row,
+        ]);
+    }
 }
