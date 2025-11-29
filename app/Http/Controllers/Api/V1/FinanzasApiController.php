@@ -315,4 +315,27 @@ class FinanzasApiController extends Controller
             'data' => $row,
         ]);
     }
+
+
+    public function ventasMensuales(Request $request)
+    {
+        $fromYear = $request->query('from_year'); // ej. 2015
+        $toYear   = $request->query('to_year');   // ej. 2024
+
+        $query = DB::table('vw_ventas_mensual');
+
+        if ($fromYear) {
+            $query->where('anio', '>=', (int) $fromYear);
+        }
+        if ($toYear) {
+            $query->where('anio', '<=', (int) $toYear);
+        }
+
+        $data = $query
+            ->orderBy('anio')
+            ->orderBy('num_mes')
+            ->get();
+
+        return response()->json($data);
+    }
 }

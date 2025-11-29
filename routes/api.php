@@ -39,5 +39,8 @@ Route::prefix('v1')->group(function () {
 //        Route::get('/cartera-detalle', [FinanzasApiController::class, 'carteraDetalle']);
 
         Route::get('/cartera-detalle', [FinanzasApiController::class, 'kpiCarteraResumen']);
+
+        Route::get('/ventas-mensuales', [FinanzasApiController::class, 'ventasMensuales']);
+
     });
 });
